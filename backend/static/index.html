@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Video Hikâye Akışı</title>
+  <style>
+    body, html { margin:0; padding:0; overflow:hidden; background:black; }
+    video { position:fixed; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+    #buttons {
+      position:fixed;
+      bottom:50px;
+      left:50%;
+      transform:translateX(-50%);
+      display:none;
+    }
+    #buttons button {
+      font-size:24px;
+      margin: 0 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Video elementi -->
+  <video id="story" src="/static/videos/video1.mp4" autoplay muted></video>
+
+  <!-- Seçim butonları -->
+  <div id="buttons">
+    <button data-src="/static/videos/video2.mp4">A Seçeneği</button>
+    <button data-src="/static/videos/video3.mp4">B Seçeneği</button>
+    <button data-src="/static/videos/video4.mp4">C Seçeneği</button>
+  </div>
+
+  <script>
+    const video = document.getElementById("story");
+    const buttons = document.getElementById("buttons");
+
+    // Video bittiğinde butonları göster
+    video.onended = () => {
+      buttons.style.display = "block";
+    };
+
+    // Butona tıklandığında:
+    buttons.addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        // Butona gömülü yeni videonun URL'sini al
+        const nextSrc = e.target.getAttribute("data-src");
+        // Video elementini durdur, kaynak değiştir, yeniden başlat
+        video.pause();
+        video.src = nextSrc;
+        video.load();
+        video.play();
+        // Butonları gizle
+        buttons.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

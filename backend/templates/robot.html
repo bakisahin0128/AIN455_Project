@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktif Robot Arayüzü</title>
+    <style>
+        /* Genel sayfa stilleri */
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #000;
+            color: #E0E0E0;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Video için tam ekran stil */
+        .fullscreen-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 100;
+            transition: opacity 1s ease-out;
+            display: none;
+            opacity: 0;
+        }
+
+        /* Başlangıç mesajı */
+        #startMessage {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            z-index: 200;
+        }
+
+        /* Karartma katmanı */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transition: opacity 1s ease;
+            display: none;
+            z-index: 150;
+        }
+
+        /* Butonlar için genel stil */
+        .choice-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #E0E0E0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+            z-index: 200;
+            display: none;
+            padding: 15px 25px;
+            text-align: center;
+        }
+        .choice-button:hover {
+            opacity: 1;
+            transform: translateY(-50%) scale(1.05);
+        }
+        #leftButton { left: 10%; }
+        #rightButton { right: 10%; }
+        #secondChoiceLeftButton { left: 10%; }
+        #secondChoiceRightButton { right: 10%; }
+
+        /* Yeniden Başlat Butonu */
+        #restartButton {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            display: none;
+            background: rgba(0, 175, 255, 0.7);
+            border: none;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+        #restartButton:hover {
+            background: rgba(0, 175, 255, 1);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* Buton parlama animasyonu */
+        @keyframes pulseGlow {
+            50% { box-shadow: 0 0 20px rgba(0, 175, 255, 0.7); }
+        }
+        .glow { animation: pulseGlow 0.6s ease-out; }
+
+        /* Ses görselleştirici */
+        #visualizer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            display: none;
+            z-index: 250;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="startMessage">Başlamak için herhangi bir tuşa basınız</div>
+    <div id="overlay"></div>
+
+    <video id="introVideo" class="fullscreen-video" preload="auto">
+        <source src="/static/Sahne_1_2.mp4" type="video/mp4">
+    </video>
+
+    <button id="leftButton" class="choice-button">Gülümseyerek ve sıcak bir tonda cevap ver</button>
+    <button id="rightButton" class="choice-button">Soğuk ve mesafeli bir tonda cevap ver</button>
+    <audio id="speech_S1_H" preload="auto"><source src="/static/S1_H.mp3" type="audio/mpeg"></audio>
+    <audio id="speech_S1_L" preload="auto"><source src="/static/S1_L.mp3" type="audio/mpeg"></audio>
+    <video id="video_S1_H" class="fullscreen-video" preload="auto"><source src="/static/S1_H.mp4" type="video/mp4"></video>
+    <video id="video_S1_L" class="fullscreen-video" preload="auto"><source src="/static/S1_L.mp4" type="video/mp4"></video>
+
+    <button id="secondChoiceLeftButton" class="choice-button">Nazikçe izin ver</button>
+    <button id="secondChoiceRightButton" class="choice-button">Gergin/çekingen yanıt ver</button>
+    <audio id="speech_S2_H" preload="auto"><source src="/static/S2_H.mp3" type="audio/mpeg"></audio>
+    <audio id="speech_S2_L" preload="auto"><source src="/static/S2_L.mp3" type="audio/mpeg"></audio>
+    <video id="video_S2_H" class="fullscreen-video" preload="auto"><source src="/static/S2_H.mp4" type="video/mp4"></video>
+    <video id="video_S2_L" class="fullscreen-video" preload="auto"><source src="/static/S2_L.mp4" type="video/mp4"></video>
+
+    <canvas id="visualizer"></canvas>
+    <button id="restartButton">Yeniden Başlat</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tüm HTML elementlerini değişkenlere ata
+            const startMessage = document.getElementById('startMessage');
+            const introVideo = document.getElementById('introVideo');
+            const overlay = document.getElementById('overlay');
+            const visualizer = document.getElementById('visualizer');
+            const restartButton = document.getElementById('restartButton');
+
+            // 1. Aşama
+            const leftButton = document.getElementById('leftButton');
+            const rightButton = document.getElementById('rightButton');
+            const speech_S1_H = document.getElementById('speech_S1_H');
+            const speech_S1_L = document.getElementById('speech_S1_L');
+            const video_S1_H = document.getElementById('video_S1_H');
+            const video_S1_L = document.getElementById('video_S1_L');
+
+            // 2. Aşama
+            const secondChoiceLeftButton = document.getElementById('secondChoiceLeftButton');
+            const secondChoiceRightButton = document.getElementById('secondChoiceRightButton');
+            const speech_S2_H = document.getElementById('speech_S2_H');
+            const speech_S2_L = document.getElementById('speech_S2_L');
+            const video_S2_H = document.getElementById('video_S2_H');
+            const video_S2_L = document.getElementById('video_S2_L');
+
+            let audioContext, analyser, animationId;
+            let started = false;
+
+            // Başlangıç
+            document.addEventListener('keydown', function handler() {
+                if (started) return;
+                started = true;
+                startMessage.style.display = 'none';
+                playChoiceVideo(introVideo);
+                document.removeEventListener('keydown', handler);
+            });
+
+            // Giriş videosu bitince ilk seçim ekranını göster
+            introVideo.addEventListener('ended', () => {
+                fadeOutAndHide(introVideo);
+                showFirstChoiceButtons();
+            });
+
+            // --- 1. AŞAMA BUTONLARI ---
+            leftButton.addEventListener('click', () => {
+                triggerSelection(leftButton, speech_S1_H, video_S1_H, [leftButton, rightButton]);
+            });
+
+            rightButton.addEventListener('click', () => {
+                triggerSelection(rightButton, speech_S1_L, video_S1_L, [leftButton, rightButton]);
+            });
+
+            // --- 2. AŞAMA EKRANINA GEÇİŞ ---
+            video_S1_H.addEventListener('ended', () => { fadeOutAndHide(video_S1_H); showSecondChoiceButtons(); });
+            video_S1_L.addEventListener('ended', () => { fadeOutAndHide(video_S1_L); showSecondChoiceButtons(); });
+
+            // --- 2. AŞAMA BUTONLARI ---
+            secondChoiceLeftButton.addEventListener('click', function() {
+                triggerSelection(this, speech_S2_H, video_S2_H, [secondChoiceLeftButton, secondChoiceRightButton]);
+            });
+
+            secondChoiceRightButton.addEventListener('click', function() {
+                triggerSelection(this, speech_S2_L, video_S2_L, [secondChoiceLeftButton, secondChoiceRightButton]);
+            });
+
+            // --- FİNAL ---
+            const finalVideos = [video_S2_H, video_S2_L];
+            finalVideos.forEach(video => {
+                video.addEventListener('ended', () => {
+                    fadeOutAndHide(video);
+                    setTimeout(() => restartButton.style.display = 'block', 1000);
+                });
+            });
+
+            restartButton.addEventListener('click', () => location.reload());
+
+            // --- YARDIMCI FONKSİYONLAR ---
+            function showFirstChoiceButtons() {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.style.opacity = '1', 50);
+                leftButton.style.display = 'block';
+                rightButton.style.display = 'block';
+            }
+
+            function showSecondChoiceButtons() {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.style.opacity = '1', 50);
+                secondChoiceLeftButton.style.display = 'block';
+                secondChoiceRightButton.style.display = 'block';
+            }
+
+            function triggerSelection(buttonElem, speechElem, videoElem, buttonsToHide) {
+                buttonElem.classList.add('glow');
+                overlay.style.opacity = '0';
+                buttonsToHide.forEach(btn => btn.style.opacity = (btn === buttonElem ? '1' : '0'));
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    buttonsToHide.forEach(btn => btn.style.display = 'none');
+                }, 500);
+                startVisualizer(speechElem);
+                speechElem.currentTime = 0;
+                speechElem.play().catch(err => console.error("Ses dosyası oynatılamadı:", err));
+                speechElem.addEventListener('ended', function handler() {
+                    speechElem.removeEventListener('ended', handler);
+                    stopVisualizer();
+                    playChoiceVideo(videoElem);
+                });
+            }
+
+            function playChoiceVideo(videoElem) {
+                videoElem.style.display = 'block';
+                setTimeout(() => videoElem.style.opacity = '1', 50);
+                videoElem.play().catch(err => console.error("Video oynatılamadı:", err));
+            }
+
+            function fadeOutAndHide(element) {
+                 element.style.opacity = '0';
+                 setTimeout(() => element.style.display = 'none', 1000);
+            }
+
+            function startVisualizer(audioElem) {
+                const canvas = visualizer; const canvasCtx = canvas.getContext('2d'); canvas.style.display = 'block'; canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; if (!audioContext) { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } let source = audioContext.createMediaElementSource(audioElem); analyser = audioContext.createAnalyser(); source.connect(analyser); analyser.connect(audioContext.destination); analyser.fftSize = 256; const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); function draw() { animationId = requestAnimationFrame(draw); analyser.getByteFrequencyData(dataArray); canvasCtx.clearRect(0, 0, canvas.width, canvas.height); canvasCtx.save(); canvasCtx.translate(canvas.width / 2, canvas.height / 2); const radius = 60; const maxBarLength = 100; const sliceAngle = Math.PI * 2 / bufferLength; for (let i = 0; i < bufferLength; i++) { const barLength = (dataArray[i] / 255) * maxBarLength; const angle = sliceAngle * i; const x1 = Math.cos(angle) * radius; const y1 = Math.sin(angle) * radius; const x2 = Math.cos(angle) * (radius + barLength); const y2 = Math.sin(angle) * (radius + barLength); const hue = Math.floor((dataArray[i] / 255) * 180); canvasCtx.strokeStyle = `hsl(${180 - hue}, 100%, 70%)`; canvasCtx.lineWidth = 2; canvasCtx.beginPath(); canvasCtx.moveTo(x1, y1); canvasCtx.lineTo(x2, y2); canvasCtx.stroke(); } canvasCtx.restore(); } draw();
+            }
+
+            function stopVisualizer() {
+                if (animationId) cancelAnimationFrame(animationId);
+                const canvasCtx = visualizer.getContext('2d');
+                canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
+                visualizer.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yolunu Seç</title>
+    <style>
+        body, html {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
+            color: #E0E0E0;
+        }
+
+        /* “Başlamak için herhangi bir tuşa basınız” mesajı */
+        #startMessage {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: #E0E0E0;
+            z-index: 1000;
+        }
+
+        /* Seçim panelleri (başlangıçta gizli) */
+        .split-container {
+            display: none; /* Tuşa basılana kadar gizli */
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+        .choice-panel {
+            flex: 1;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .left-panel {
+            background-image: url('/static/Robot_.png');
+        }
+        .right-panel {
+            background-image: url('/static/Human.jpg');
+        }
+        .choice-panel:hover {
+            flex-grow: 1.2;
+            filter: brightness(1.1);
+        }
+        .split-container:hover .choice-panel:not(:hover) {
+            filter: brightness(0.6);
+        }
+        .selected {
+            animation: glow 800ms ease-out forwards;
+            z-index: 10;
+        }
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.4);
+                filter: brightness(1.2);
+            }
+            50% {
+                box-shadow: 0 0 30px 20px rgba(255, 255, 255, 0.7), 0 0 50px 35px rgba(255, 255, 180, 0.5);
+                filter: brightness(1.6);
+            }
+            100% {
+                box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.4);
+                filter: brightness(1.2);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Başlangıç mesajı -->
+    <div id="startMessage">Başlamak için herhangi bir tuşa basınız</div>
+
+    <!-- Arka plan müziği (tuşa basılınca çalacak) -->
+    <audio id="background-audio" loop preload="auto">
+        <source src="/static/background_music.mp3" type="audio/mpeg">
+        Tarayıcınız ses etiketini desteklemiyor.
+    </audio>
+
+    <!-- Seçim sesi -->
+    <audio id="selection-audio" preload="auto">
+        <source src="/static/selection_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Seçim panelleri -->
+    <div class="split-container" id="splitContainer">
+        <div id="robotChoice" class="choice-panel left-panel"></div>
+        <div id="humanChoice" class="choice-panel right-panel"></div>
+    </div>
+
+    <script>
+        const startMessage   = document.getElementById('startMessage');
+        const splitContainer = document.getElementById('splitContainer');
+        const robotChoice    = document.getElementById('robotChoice');
+        const humanChoice    = document.getElementById('humanChoice');
+        const bgAudio        = document.getElementById('background-audio');
+        const selectionAudio = document.getElementById('selection-audio');
+
+        let started = false;
+
+        // Klavyeden herhangi bir tuşa basılınca tetiklenecek
+        document.addEventListener('keydown', function handler(event) {
+            if (started) return; // Bir kere çalışsın
+            started = true;
+
+            // “Başlamak için...” mesajını gizle
+            startMessage.style.display = 'none';
+
+            // Split ekranı görünür yap
+            splitContainer.style.display = 'flex';
+
+            // Arka plan müziğini başlat
+            bgAudio.volume = 1.0;
+            bgAudio.play().catch(err => {
+                console.warn('Arka plan müziği otomatik oynatılamadı:', err);
+            });
+
+            // Listener’ı kaldır
+            document.removeEventListener('keydown', handler);
+        });
+
+        // Sesin yavaşça kapanması için fonksiyon
+        function fadeOutAudio(audioElement) {
+            const fadeInterval = 20;
+            const fade = setInterval(function () {
+                if (audioElement.volume < 0.01) {
+                    audioElement.volume = 0;
+                    audioElement.pause();
+                    clearInterval(fade);
+                } else {
+                    audioElement.volume *= 0.92;
+                }
+            }, fadeInterval);
+        }
+
+        // Robot seçildiğinde
+        robotChoice.addEventListener('click', function() {
+            fadeOutAudio(bgAudio);
+            humanChoice.style.pointerEvents = 'none';
+            robotChoice.style.pointerEvents = 'none';
+
+            selectionAudio.play();
+            robotChoice.classList.add('selected');
+            humanChoice.style.filter = 'brightness(0.4)';
+
+            setTimeout(function() {
+                window.location.href = '/robot';
+            }, 900);
+        });
+
+        // İnsan seçildiğinde
+        humanChoice.addEventListener('click', function() {
+            fadeOutAudio(bgAudio);
+            robotChoice.style.pointerEvents = 'none';
+            humanChoice.style.pointerEvents = 'none';
+
+            selectionAudio.play();
+            humanChoice.classList.add('selected');
+            robotChoice.style.filter = 'brightness(0.4)';
+
+            setTimeout(function() {
+                window.location.href = '/human';
+            }, 900);
+        });
+    </script>
+
+</body>
+</html>

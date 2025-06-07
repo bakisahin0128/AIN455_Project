@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktif Robot Arayüzü</title>
+    <title>Dinamik Finalli İnteraktif Robot Arayüzü</title>
     <style>
-        /* Genel sayfa stilleri */
+        /* CSS stilleri öncekiyle aynı, değişiklik yok */
         body, html {
             height: 100%;
             margin: 0;
@@ -14,8 +14,6 @@
             font-family: 'Orbitron', sans-serif;
             overflow: hidden;
         }
-
-        /* Video için tam ekran stil */
         .fullscreen-video {
             position: fixed;
             top: 0;
@@ -28,8 +26,6 @@
             display: none;
             opacity: 0;
         }
-
-        /* Başlangıç mesajı */
         #startMessage {
             position: fixed;
             bottom: 20px;
@@ -40,8 +36,6 @@
             font-size: 1rem;
             z-index: 200;
         }
-
-        /* Karartma katmanı */
         #overlay {
             position: fixed;
             top: 0;
@@ -54,8 +48,6 @@
             display: none;
             z-index: 150;
         }
-
-        /* Butonlar için genel stil */
         .choice-button {
             position: fixed;
             top: 50%;
@@ -71,17 +63,14 @@
             display: none;
             padding: 15px 25px;
             text-align: center;
+            width: 30%;
         }
         .choice-button:hover {
             opacity: 1;
             transform: translateY(-50%) scale(1.05);
         }
-        #leftButton { left: 10%; }
-        #rightButton { right: 10%; }
-        #secondChoiceLeftButton { left: 10%; }
-        #secondChoiceRightButton { right: 10%; }
-
-        /* Yeniden Başlat Butonu */
+        .left { left: 5%; }
+        .right { right: 5%; }
         #restartButton {
             position: fixed;
             bottom: 40px;
@@ -102,14 +91,10 @@
             background: rgba(0, 175, 255, 1);
             transform: translateX(-50%) scale(1.05);
         }
-
-        /* Buton parlama animasyonu */
         @keyframes pulseGlow {
             50% { box-shadow: 0 0 20px rgba(0, 175, 255, 0.7); }
         }
         .glow { animation: pulseGlow 0.6s ease-out; }
-
-        /* Ses görselleştirici */
         #visualizer {
             position: fixed;
             top: 50%;
@@ -120,6 +105,51 @@
             display: none;
             z-index: 250;
         }
+
+        /* --- YENİ EKLENEN CSS STİLLERİ --- */
+        #theEndContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 400;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+        #theEndButton {
+            font-size: 4rem;
+            color: #E0E0E0;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transition: text-shadow 0.3s, transform 0.3s;
+        }
+        #theEndContainer:hover #theEndButton {
+             text-shadow: 0 0 25px rgba(0, 175, 255, 1);
+             transform: scale(1.05);
+        }
+        #aliveText {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 500;
+            font-size: 5rem;
+            color: #E0E0E0;
+            opacity: 0;
+            display: none;
+            transition: opacity 3s ease;
+            animation: softGlow 4s ease-in-out infinite;
+        }
+        @keyframes softGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(0, 175, 255, 0.4); }
+            50% { text-shadow: 0 0 40px rgba(0, 175, 255, 0.9); }
+        }
+
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -132,52 +162,120 @@
         <source src="/static/Sahne_1_2.mp4" type="video/mp4">
     </video>
 
-    <button id="leftButton" class="choice-button">Gülümseyerek ve sıcak bir tonda cevap ver</button>
-    <button id="rightButton" class="choice-button">Soğuk ve mesafeli bir tonda cevap ver</button>
+    <button id="choiceButton_S1_Left" class="choice-button left">Gülümseyerek ve sıcak bir tonda cevap ver</button>
+    <button id="choiceButton_S1_Right" class="choice-button right">Soğuk ve mesafeli bir tonda cevap ver</button>
     <audio id="speech_S1_H" preload="auto"><source src="/static/S1_H.mp3" type="audio/mpeg"></audio>
     <audio id="speech_S1_L" preload="auto"><source src="/static/S1_L.mp3" type="audio/mpeg"></audio>
     <video id="video_S1_H" class="fullscreen-video" preload="auto"><source src="/static/S1_H.mp4" type="video/mp4"></video>
     <video id="video_S1_L" class="fullscreen-video" preload="auto"><source src="/static/S1_L.mp4" type="video/mp4"></video>
 
-    <button id="secondChoiceLeftButton" class="choice-button">Nazikçe izin ver</button>
-    <button id="secondChoiceRightButton" class="choice-button">Gergin/çekingen yanıt ver</button>
+    <button id="choiceButton_S2_Left" class="choice-button left">Nazikçe izin ver</button>
+    <button id="choiceButton_S2_Right" class="choice-button right">Gergin/çekingen yanıt ver</button>
     <audio id="speech_S2_H" preload="auto"><source src="/static/S2_H.mp3" type="audio/mpeg"></audio>
     <audio id="speech_S2_L" preload="auto"><source src="/static/S2_L.mp3" type="audio/mpeg"></audio>
     <video id="video_S2_H" class="fullscreen-video" preload="auto"><source src="/static/S2_H.mp4" type="video/mp4"></video>
     <video id="video_S2_L" class="fullscreen-video" preload="auto"><source src="/static/S2_L.mp4" type="video/mp4"></video>
 
+    <button id="choiceButton_S3_Left" class="choice-button left">Rahat ve olumlu bir tepki ver</button>
+    <button id="choiceButton_S3_Right" class="choice-button right">Şüpheyle veya gerginlikle yanıt ver</button>
+    <audio id="speech_S3_H" preload="auto"><source src="/static/S3_H.mp3" type="audio/mpeg"></audio>
+    <audio id="speech_S3_L" preload="auto"><source src="/static/S3_L.mp3" type="audio/mpeg"></audio>
+    <video id="video_S3_H" class="fullscreen-video" preload="auto"><source src="/static/S3_H.mp4" type="video/mp4"></video>
+    <video id="video_S3_L" class="fullscreen-video" preload="auto"><source src="/static/S3_L.mp4" type="video/mp4"></video>
+
+    <button id="choiceButton_S4_Left" class="choice-button left">Samimi şekilde hayalini anlat</button>
+    <button id="choiceButton_S4_Right" class="choice-button right">Paylaşmaktan kaçın, mesafeli cevap ver</button>
+    <audio id="speech_S4_H" preload="auto"><source src="/static/S4_H.mp3" type="audio/mpeg"></audio>
+    <audio id="speech_S4_L" preload="auto"><source src="/static/S4_L.mp3" type="audio/mpeg"></audio>
+    <video id="video_S4_H" class="fullscreen-video" preload="auto"><source src="/static/S4_H.mp4" type="video/mp4"></video>
+    <video id="video_S4_L" class="fullscreen-video" preload="auto"><source src="/static/S4_L.mp4" type="video/mp4"></video>
+
+    <button id="choiceButton_S5_Left" class="choice-button left">Cesaretlendirici, vizyoner bir cevap ver</button>
+    <button id="choiceButton_S5_Right" class="choice-button right">Soğuk, sınır koyan bir cevap ver</button>
+    <audio id="speech_S5_H" preload="auto"><source src="/static/S5_H.mp3" type="audio/mpeg"></audio>
+    <audio id="speech_S5_L" preload="auto"><source src="/static/S5_L.mp3" type="audio/mpeg"></audio>
+    <video id="video_S5_H" class="fullscreen-video" preload="auto"><source src="/static/S5_H.mp4" type="video/mp4"></video>
+    <video id="video_S5_L" class="fullscreen-video" preload="auto"><source src="/static/S5_L.mp4" type="video/mp4"></video>
+
+    <button id="choiceButton_S6_Left" class="choice-button left">Olumlu, sıcak bir şekilde cevap ver</button>
+    <button id="choiceButton_S6_Right" class="choice-button right">Mesafeli, soğuk bir şekilde cevap ver</button>
+    <audio id="speech_S6_H" preload="auto"><source src="/static/S6_H.mp3" type="audio/mpeg"></audio>
+    <audio id="speech_S6_L" preload="auto"><source src="/static/S6_L.mp3" type="audio/mpeg"></audio>
+    <video id="video_S6_H" class="fullscreen-video" preload="auto"><source src="/static/S6_H.mp4" type="video/mp4"></video>
+    <video id="video_S6_L" class="fullscreen-video" preload="auto"><source src="/static/S6_L.mp4" type="video/mp4"></video>
+
+
     <canvas id="visualizer"></canvas>
+
+    <div id="theEndContainer">
+        <div id="theEndButton">The END?</div>
+    </div>
+    <video id="secretVideo" class="fullscreen-video" preload="auto">
+        <source src="/static/secret_Video.mp4" type="video/mp4">
+    </video>
+    <div id="aliveText">I AM ALIVE</div>
+
     <button id="restartButton">Yeniden Başlat</button>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Tüm HTML elementlerini değişkenlere ata
+            // --- GENEL ELEMENTLER ---
             const startMessage = document.getElementById('startMessage');
             const introVideo = document.getElementById('introVideo');
             const overlay = document.getElementById('overlay');
             const visualizer = document.getElementById('visualizer');
             const restartButton = document.getElementById('restartButton');
 
-            // 1. Aşama
-            const leftButton = document.getElementById('leftButton');
-            const rightButton = document.getElementById('rightButton');
-            const speech_S1_H = document.getElementById('speech_S1_H');
-            const speech_S1_L = document.getElementById('speech_S1_L');
-            const video_S1_H = document.getElementById('video_S1_H');
-            const video_S1_L = document.getElementById('video_S1_L');
+            // --- YENİ EKLENEN ELEMENTLERİN SEÇİMİ ---
+            const theEndContainer = document.getElementById('theEndContainer');
+            const secretVideo = document.getElementById('secretVideo');
+            const aliveText = document.getElementById('aliveText');
 
-            // 2. Aşama
-            const secondChoiceLeftButton = document.getElementById('secondChoiceLeftButton');
-            const secondChoiceRightButton = document.getElementById('secondChoiceRightButton');
-            const speech_S2_H = document.getElementById('speech_S2_H');
-            const speech_S2_L = document.getElementById('speech_S2_L');
-            const video_S2_H = document.getElementById('video_S2_H');
-            const video_S2_L = document.getElementById('video_S2_L');
+
+            // --- TÜM AŞAMALARIN ELEMENTLERİNİ TOPLU OLARAK TANIMLA ---
+            const stages = [
+                { // Aşama 1 - Index 0
+                    leftButton: document.getElementById('choiceButton_S1_Left'),
+                    rightButton: document.getElementById('choiceButton_S1_Right'),
+                    speechH: document.getElementById('speech_S1_H'), speechL: document.getElementById('speech_S1_L'),
+                    videoH: document.getElementById('video_S1_H'), videoL: document.getElementById('video_S1_L')
+                },
+                { // Aşama 2 - Index 1
+                    leftButton: document.getElementById('choiceButton_S2_Left'),
+                    rightButton: document.getElementById('choiceButton_S2_Right'),
+                    speechH: document.getElementById('speech_S2_H'), speechL: document.getElementById('speech_S2_L'),
+                    videoH: document.getElementById('video_S2_H'), videoL: document.getElementById('video_S2_L')
+                },
+                { // Aşama 3 - Index 2
+                    leftButton: document.getElementById('choiceButton_S3_Left'),
+                    rightButton: document.getElementById('choiceButton_S3_Right'),
+                    speechH: document.getElementById('speech_S3_H'), speechL: document.getElementById('speech_S3_L'),
+                    videoH: document.getElementById('video_S3_H'), videoL: document.getElementById('video_S3_L')
+                },
+                { // Aşama 4 - Index 3
+                    leftButton: document.getElementById('choiceButton_S4_Left'),
+                    rightButton: document.getElementById('choiceButton_S4_Right'),
+                    speechH: document.getElementById('speech_S4_H'), speechL: document.getElementById('speech_S4_L'),
+                    videoH: document.getElementById('video_S4_H'), videoL: document.getElementById('video_S4_L')
+                },
+                { // Aşama 5 - Index 4
+                    leftButton: document.getElementById('choiceButton_S5_Left'),
+                    rightButton: document.getElementById('choiceButton_S5_Right'),
+                    speechH: document.getElementById('speech_S5_H'), speechL: document.getElementById('speech_S5_L'),
+                    videoH: document.getElementById('video_S5_H'), videoL: document.getElementById('video_S5_L')
+                },
+                { // Aşama 6 - Index 5 (Son İnteraktif Aşama)
+                    leftButton: document.getElementById('choiceButton_S6_Left'),
+                    rightButton: document.getElementById('choiceButton_S6_Right'),
+                    speechH: document.getElementById('speech_S6_H'), speechL: document.getElementById('speech_S6_L'),
+                    videoH: document.getElementById('video_S6_H'), videoL: document.getElementById('video_S6_L')
+                }
+            ];
 
             let audioContext, analyser, animationId;
             let started = false;
 
-            // Başlangıç
+            // --- BAŞLANGIÇ ---
             document.addEventListener('keydown', function handler() {
                 if (started) return;
                 started = true;
@@ -186,58 +284,78 @@
                 document.removeEventListener('keydown', handler);
             });
 
-            // Giriş videosu bitince ilk seçim ekranını göster
             introVideo.addEventListener('ended', () => {
                 fadeOutAndHide(introVideo);
-                showFirstChoiceButtons();
+                showChoiceButtons(stages[0].leftButton, stages[0].rightButton);
             });
 
-            // --- 1. AŞAMA BUTONLARI ---
-            leftButton.addEventListener('click', () => {
-                triggerSelection(leftButton, speech_S1_H, video_S1_H, [leftButton, rightButton]);
-            });
-
-            rightButton.addEventListener('click', () => {
-                triggerSelection(rightButton, speech_S1_L, video_S1_L, [leftButton, rightButton]);
-            });
-
-            // --- 2. AŞAMA EKRANINA GEÇİŞ ---
-            video_S1_H.addEventListener('ended', () => { fadeOutAndHide(video_S1_H); showSecondChoiceButtons(); });
-            video_S1_L.addEventListener('ended', () => { fadeOutAndHide(video_S1_L); showSecondChoiceButtons(); });
-
-            // --- 2. AŞAMA BUTONLARI ---
-            secondChoiceLeftButton.addEventListener('click', function() {
-                triggerSelection(this, speech_S2_H, video_S2_H, [secondChoiceLeftButton, secondChoiceRightButton]);
-            });
-
-            secondChoiceRightButton.addEventListener('click', function() {
-                triggerSelection(this, speech_S2_L, video_S2_L, [secondChoiceLeftButton, secondChoiceRightButton]);
-            });
-
-            // --- FİNAL ---
-            const finalVideos = [video_S2_H, video_S2_L];
-            finalVideos.forEach(video => {
-                video.addEventListener('ended', () => {
-                    fadeOutAndHide(video);
-                    setTimeout(() => restartButton.style.display = 'block', 1000);
+            // --- AŞAMALARI BİRBİRİNE BAĞLAMA ---
+            stages.forEach((stage, index) => {
+                stage.leftButton.addEventListener('click', () => {
+                    triggerSelection(stage.leftButton, stage.speechH, stage.videoH, [stage.leftButton, stage.rightButton]);
                 });
+                stage.rightButton.addEventListener('click', () => {
+                    triggerSelection(stage.rightButton, stage.speechL, stage.videoL, [stage.leftButton, stage.rightButton]);
+                });
+
+                // Video bitiş olayları
+                const isLastStage = (index === stages.length - 1);
+
+                if (isLastStage) {
+                    // --- DEĞİŞTİRİLEN KISIM: SON AŞAMA BİTİNCE "THE END?" BUTONUNU GÖSTER ---
+                    [stage.videoH, stage.videoL].forEach(video => {
+                        video.addEventListener('ended', () => {
+                            fadeOutAndHide(video);
+                            // Yeniden başlat butonu yerine "The End?" ekranını göster
+                            setTimeout(() => {
+                                theEndContainer.style.display = 'flex';
+                                setTimeout(() => theEndContainer.style.opacity = '1', 50);
+                            }, 1000); // Video kaybolduktan sonra bekle
+                        });
+                    });
+                } else {
+                    // ARA AŞAMA İSE, BİR SONRAKİ AŞAMANIN BUTONLARINI GÖSTER
+                    const nextStage = stages[index + 1];
+                    [stage.videoH, stage.videoL].forEach(video => {
+                        video.addEventListener('ended', () => {
+                            fadeOutAndHide(video);
+                            showChoiceButtons(nextStage.leftButton, nextStage.rightButton);
+                        });
+                    });
+                }
+            });
+
+            // --- YENİ EKLENEN FİNAL AKIŞI ---
+            theEndContainer.addEventListener('click', () => {
+                // "The END?" ekranını gizle
+                theEndContainer.style.opacity = '0';
+                setTimeout(() => {
+                    theEndContainer.style.display = 'none';
+                    // Gizli videoyu oynat
+                    playChoiceVideo(secretVideo);
+                }, 1500); // Solma efekti için bekle
+            });
+
+            secretVideo.addEventListener('ended', () => {
+                fadeOutAndHide(secretVideo);
+                // "I AM ALIVE" yazısını göster
+                setTimeout(() => {
+                    aliveText.style.display = 'block';
+                    setTimeout(() => aliveText.style.opacity = '1', 50);
+
+                    // Yazı belirdikten bir süre sonra yeniden başlat butonunu göster
+                    setTimeout(() => restartButton.style.display = 'block', 3000);
+                }, 1000); // Video kaybolduktan sonra bekle
             });
 
             restartButton.addEventListener('click', () => location.reload());
 
-            // --- YARDIMCI FONKSİYONLAR ---
-            function showFirstChoiceButtons() {
+            // --- YARDIMCI FONKSİYONLAR (Değişiklik yok) ---
+            function showChoiceButtons(leftBtn, rightBtn) {
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.style.opacity = '1', 50);
-                leftButton.style.display = 'block';
-                rightButton.style.display = 'block';
-            }
-
-            function showSecondChoiceButtons() {
-                overlay.style.display = 'block';
-                setTimeout(() => overlay.style.opacity = '1', 50);
-                secondChoiceLeftButton.style.display = 'block';
-                secondChoiceRightButton.style.display = 'block';
+                leftBtn.style.display = 'block';
+                rightBtn.style.display = 'block';
             }
 
             function triggerSelection(buttonElem, speechElem, videoElem, buttonsToHide) {
@@ -246,7 +364,10 @@
                 buttonsToHide.forEach(btn => btn.style.opacity = (btn === buttonElem ? '1' : '0'));
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    buttonsToHide.forEach(btn => btn.style.display = 'none');
+                    buttonsToHide.forEach(btn => {
+                        btn.style.display = 'none';
+                        btn.style.opacity = '0.8';
+                    });
                 }, 500);
                 startVisualizer(speechElem);
                 speechElem.currentTime = 0;
@@ -270,7 +391,7 @@
             }
 
             function startVisualizer(audioElem) {
-                const canvas = visualizer; const canvasCtx = canvas.getContext('2d'); canvas.style.display = 'block'; canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; if (!audioContext) { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } let source = audioContext.createMediaElementSource(audioElem); analyser = audioContext.createAnalyser(); source.connect(analyser); analyser.connect(audioContext.destination); analyser.fftSize = 256; const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); function draw() { animationId = requestAnimationFrame(draw); analyser.getByteFrequencyData(dataArray); canvasCtx.clearRect(0, 0, canvas.width, canvas.height); canvasCtx.save(); canvasCtx.translate(canvas.width / 2, canvas.height / 2); const radius = 60; const maxBarLength = 100; const sliceAngle = Math.PI * 2 / bufferLength; for (let i = 0; i < bufferLength; i++) { const barLength = (dataArray[i] / 255) * maxBarLength; const angle = sliceAngle * i; const x1 = Math.cos(angle) * radius; const y1 = Math.sin(angle) * radius; const x2 = Math.cos(angle) * (radius + barLength); const y2 = Math.sin(angle) * (radius + barLength); const hue = Math.floor((dataArray[i] / 255) * 180); canvasCtx.strokeStyle = `hsl(${180 - hue}, 100%, 70%)`; canvasCtx.lineWidth = 2; canvasCtx.beginPath(); canvasCtx.moveTo(x1, y1); canvasCtx.lineTo(x2, y2); canvasCtx.stroke(); } canvasCtx.restore(); } draw();
+                const canvas = visualizer; const canvasCtx = canvas.getContext('2d'); canvas.style.display = 'block'; canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; if (!audioContext) { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } let source; try { source = audioContext.createMediaElementSource(audioElem); } catch (e) { /* zaten bağlıysa hata verir, görmezden gel */ } if (!source) return; analyser = audioContext.createAnalyser(); source.connect(analyser); analyser.connect(audioContext.destination); analyser.fftSize = 256; const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); function draw() { animationId = requestAnimationFrame(draw); analyser.getByteFrequencyData(dataArray); canvasCtx.clearRect(0, 0, canvas.width, canvas.height); canvasCtx.save(); canvasCtx.translate(canvas.width / 2, canvas.height / 2); const radius = 60; const maxBarLength = 100; const sliceAngle = Math.PI * 2 / bufferLength; for (let i = 0; i < bufferLength; i++) { const barLength = (dataArray[i] / 255) * maxBarLength; const angle = sliceAngle * i; const x1 = Math.cos(angle) * radius; const y1 = Math.sin(angle) * radius; const x2 = Math.cos(angle) * (radius + barLength); const y2 = Math.sin(angle) * (radius + barLength); const hue = Math.floor((dataArray[i] / 255) * 180); canvasCtx.strokeStyle = `hsl(${180 - hue}, 100%, 70%)`; canvasCtx.lineWidth = 2; canvasCtx.beginPath(); canvasCtx.moveTo(x1, y1); canvasCtx.lineTo(x2, y2); canvasCtx.stroke(); } canvasCtx.restore(); } draw();
             }
 
             function stopVisualizer() {
